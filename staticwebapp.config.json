@@ -1,21 +1,14 @@
 {
-  "auth": {
-    "identityProviders": {
-      "azureActiveDirectory": {
-        "registration": {
-          "openIdIssuer": "https://login.microsoftonline.com/94dd529e-f6f9-4349-85e2-cfc704c81f89/v2.0",
-          "clientIdSettingName": "AZURE_CLIENT_ID",
-          "clientSecretSettingName": "AZURE_CLIENT_SECRET"
-        }
-      }
-    }
-  },
   "routes": [
     { "route": "/open.html", "allowedRoles": ["anonymous", "authenticated"] },
-    { "route": "/*", "allowedRoles": ["authenticated"] }
+    { "route": "/denied.html", "allowedRoles": ["anonymous", "authenticated"] },
+    { "route": "/.auth/login/github", "statusCode": 404 },
+    { "route": "/.auth/login/twitter", "statusCode": 404 },
+    { "route": "/*", "allowedRoles": ["millennium"] }
   ],
   "responseOverrides": {
-    "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=/open.html", "statusCode": 302 }
+    "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=/open.html", "statusCode": 302 },
+    "403": { "rewrite": "/denied.html", "statusCode": 403 }
   },
   "globalHeaders": {
     "Referrer-Policy": "strict-origin-when-cross-origin",
