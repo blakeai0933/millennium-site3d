@@ -39,7 +39,14 @@ async function start(P){
   let reachEl=null;
   const drawReach=r=>{try{if(reachEl)reachEl.remove();reachEl=new lib.Polygon3DElement({altitudeMode:'CLAMP_TO_GROUND',fillColor:'rgba(224,49,43,0.18)',strokeColor:'#e0312b',strokeWidth:3,drawsOccludedSegments:true});const pts=ring(r);if('path' in reachEl)reachEl.path=pts;else reachEl.outerCoordinates=pts;map.append(reachEl)}catch(e){}};
   drawReach(reach);
-  const keyF=r=>{const S=KEYSW;mapKey($('flym'),'keyF',[['Site',[[S.ring('#e0312b','solid','rgba(224,49,43,.18)'),`Crane reach (${r} ft from the site pin)`],[S.dot('#e0312b','#fff'),'Site pin']]]],'Power lines are shown on the 3D city and Satellite tabs.')};
+  // utility poles within 500 ft as 3D markers on a stem, colored by distance; tap one for its details
+  try{const mk=await google.maps.importLibrary('marker').catch(()=>null),M=lib.Marker3DInteractiveElement||lib.Marker3DElement;
+    (((P.pw||{}).p)||[]).forEach(a=>{const [dx,dy,k]=a,dft=Math.round(Math.hypot(dx,dy)*FT);if(dft>500)return;
+      const el=new M({position:{lat:lat+dy/111320,lng:lng+dx/111320/Math.cos(lat*Math.PI/180),altitude:k==='t'?32:13},altitudeMode:'RELATIVE_TO_GROUND',extruded:true,label:dft<=300?dft+' ft':''});
+      if(mk&&mk.PinElement){try{el.append(new mk.PinElement({background:POLECOL(dft,reach),borderColor:'#ffffff',glyphColor:'#ffffff',scale:0.75}))}catch(e){}}
+      if(lib.Marker3DInteractiveElement)el.addEventListener('gmp-click',ev=>{ev.stopPropagation&&ev.stopPropagation();poleBox($('flym'),poleHtml(a,reach))});
+      map.append(el)})}catch(e){console.warn('pole markers',e)}
+  const keyF=r=>{const S=KEYSW;mapKey($('flym'),'keyF',[['Site',[[S.ring('#e0312b','solid','rgba(224,49,43,.18)'),`Crane reach (${r} ft from the site pin)`],[S.dot('#e0312b','#fff'),'Site pin']]],['Utility poles (within 500 ft)',[[`<i><img src="${POLEICON('#d9661f')}" width="14" height="14" alt=""></i>`,'Pole — tap for details'],[`<i><img src="${POLEICON('#f2b01e')}" width="14" height="14" alt=""></i>`,'Within 300 ft'],[`<i><img src="${POLEICON('#e0312b')}" width="14" height="14" alt=""></i>`,'Inside the crane clearance']]]],'Power lines are shown on the 3D city and Satellite tabs.')};
   keyF(reach);
 
   const cam=(o)=>({center:site,range:o.range,tilt:o.tilt,heading:o.heading});

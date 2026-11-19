@@ -39,8 +39,12 @@ const PW=P.pw||{p:[],l:[]};
 const pwE=[],reachE=[];
 const R=()=>REACH/FT,CLR=()=>(REACH+20)/FT;
 function drawPower(){pwE.forEach(e=>viewer.entities.remove(e));pwE.length=0;const risky=[];
-  (PW.p||[]).forEach(([dx,dy,k])=>{const d=Math.hypot(dx,dy),bad=d<=CLR(),hgt=k==='t'?30:12.2;if(bad)risky.push(`${k==='t'?'tower':'pole'} ${Math.round(d*FT)} ft`);
-    pwE.push(viewer.entities.add({position:at(dx,dy,hgt/2),cylinder:{length:hgt,topRadius:k==='t'?1.2:.22,bottomRadius:k==='t'?2.5:.22,material:bad?Cesium.Color.RED:Cesium.Color.fromCssColorString('#8a6a3a')}}))});
+  (PW.p||[]).forEach(a=>{const [dx,dy,k]=a,d=Math.hypot(dx,dy),dft=Math.round(d*FT),bad=d<=CLR(),hgt=k==='t'?30:12.2;if(bad)risky.push(`${k==='t'?'tower':'pole'} ${dft} ft`);
+    pwE.push(viewer.entities.add({position:at(dx,dy,hgt/2),cylinder:{length:hgt,topRadius:k==='t'?1.2:.22,bottomRadius:k==='t'?2.5:.22,material:bad?Cesium.Color.RED:Cesium.Color.fromCssColorString('#8a6a3a')}}));
+    // pole marker on top, visible through buildings, with the distance close to the site
+    pwE.push(viewer.entities.add({position:at(dx,dy,hgt+1),properties:{poleInfo:poleHtml(a,REACH)},
+      billboard:{image:POLEICON(POLECOL(dft,REACH),k==='t'),width:24,height:24,verticalOrigin:Cesium.VerticalOrigin.BOTTOM,disableDepthTestDistance:Number.POSITIVE_INFINITY,scaleByDistance:new Cesium.NearFarScalar(80,1.2,1500,0.55)},
+      label:dft<=300?{text:dft+' ft',font:'700 12px system-ui,sans-serif',fillColor:Cesium.Color.WHITE,outlineColor:Cesium.Color.BLACK,outlineWidth:3,style:Cesium.LabelStyle.FILL_AND_OUTLINE,verticalOrigin:Cesium.VerticalOrigin.BOTTOM,pixelOffset:new Cesium.Cartesian2(0,-28),disableDepthTestDistance:Number.POSITIVE_INFINITY,distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,900)}:undefined}))});
   (PW.l||[]).forEach(([pts,kv,f])=>{const ugl=f==='u';if(ugl&&!($('ckUg')&&$('ckUg').checked))return;const z=ugl?0.4:kv&&kv>=60?30:11;let near=1e9;for(let i=0;i<pts.length-1;i++){const [ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
     const bad=!ugl&&near<=CLR();if(bad)risky.push(`${f==='q'?'possible ':''}${kv?kv+' kV ':''}line ${Math.round(near*FT)} ft`);
     pwE.push(viewer.entities.add({polyline:{positions:pts.map(([x,y])=>at(x,y,z)),width:bad?3:2,clampToGround:ugl,material:bad?Cesium.Color.RED:ugl?new Cesium.PolylineDashMaterialProperty({color:Cesium.Color.fromCssColorString('#9b6bff'),dashLength:8}):f==='q'?new Cesium.PolylineDashMaterialProperty({color:Cesium.Color.fromCssColorString('#8a97a3'),dashLength:14}):Cesium.Color.fromCssColorString(kv>=60?'#f07a1a':'#ffcf33')}}))});
@@ -83,7 +87,7 @@ $('ckUg').checked=false;$('ckUg').onchange=()=>{info();key3d()};
 let meas=false,mpts=[],mE=[];
 const clearM=()=>{mE.forEach(e=>viewer.entities.remove(e));mE=[];mpts=[]};
 $('measBtn').onclick=()=>{meas=!meas;$('measBtn').classList.toggle('on',meas);clearM();$('meas').hidden=!meas;$('meas').innerHTML=meas?'Tap a point on a roof, pole or the ground.':''};
-viewer.screenSpaceEventHandler.setInputAction(e=>{if(!meas)return;const p=viewer.scene.pickPosition(e.position);if(!p)return;
+viewer.screenSpaceEventHandler.setInputAction(e=>{if(!meas){const pk=viewer.scene.pick(e.position);const pi=pk&&pk.id&&pk.id.properties&&pk.id.properties.poleInfo;if(pi)poleBox(cz,pi.getValue?pi.getValue():pi);return}const p=viewer.scene.pickPosition(e.position);if(!p)return;
   if(mpts.length===2)clearM();mpts.push(p);mE.push(viewer.entities.add({position:p,point:{pixelSize:9,color:Cesium.Color.YELLOW,disableDepthTestDistance:Number.POSITIVE_INFINITY}}));
   const c=p=>Cesium.Cartographic.fromCartesian(p);const hp=c(p).height-h0;
   if(mpts.length===1){$('meas').innerHTML=`Height above site grade: <b>${Math.round(hp*FT)} ft</b><div class="dim" style="color:#9fb0bf">Tap a second point to measure between them.</div>`}

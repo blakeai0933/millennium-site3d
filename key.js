@@ -9,6 +9,8 @@ const css=`
 .key .kg{font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;color:#9fb0bf;margin-top:5px}
 .key .kr{display:flex;align-items:center;gap:7px;line-height:1.3}.key .kr>i{flex:0 0 auto;display:inline-block}
 .key .note{color:#9fb0bf;font-size:10.5px;margin-top:3px}
+.polebox{position:absolute;left:max(10px,env(safe-area-inset-left));top:10px;z-index:6;max-width:min(270px,calc(100% - 80px));background:rgba(14,21,27,.95);color:#e8eef3;border:1px solid #35444f;border-left:4px solid #d9661f;border-radius:8px;padding:8px 26px 8px 10px;font-size:12px;line-height:1.45;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.polebox button{position:absolute;top:2px;right:4px;border:0;background:none;color:#9fb0bf;font-size:16px;cursor:pointer}
 @media (max-width:760px){.key{bottom:10px;font-size:11px}}
 `;
 const S={
@@ -19,6 +21,18 @@ const S={
   bar:c=>`<i style="width:4px;height:14px;margin:0 9px;background:${c};border-radius:1px"></i>`
 };
 window.KEYSW=S;
+// pole symbol (same look as the bid map): colored disc, white crossarm; towers get a triangle
+window.POLEICON=(c,tower)=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-20 -20 40 40"><circle r="15" fill="${c}" stroke="#fff" stroke-width="3.5"/>${tower?'<path d="M0 -9L8 7H-8Z M-4 1H4" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>':'<path d="M0 10V-10M-8 -5.5H8M-5 -1H5" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>'}</svg>`);
+window.POLECOL=(dft,reach)=>dft<=reach+20?'#e0312b':dft<=300?'#f2b01e':'#d9661f';
+// p = [dx, dy, kind, poleNumber, kV, transformer, owner, circuit] in metres from the site pin
+window.poleHtml=(p,reach)=>{const [dx,dy,k,r,kv,tx,op,ckt]=p,d=Math.round(Math.hypot(dx,dy)*3.28084),a=Math.atan2(dx,dy)*180/Math.PI,dir=['N','NE','E','SE','S','SW','W','NW'][Math.round(((a+360)%360)/45)%8];
+  const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  return [`<b>${k==='t'?'Transmission tower':'Utility pole'}${r?' #'+e(r):''}</b>${op?' · '+e(op):''}`,
+    (ckt||kv)?`Carries ${ckt?'SCE circuit '+e(ckt)+' ':''}${kv?kv+' kV':''}`:'',tx?'Has a transformer':'',
+    `${d} ft ${dir} of the site pin${d<=reach+20?` — <b style="color:#ff6b62">inside the ${reach} ft reach + 20 ft clearance</b>`:d<=300?' — within 300 ft':''}`,
+    `<span style="color:#9fb0bf">Source: ${r&&/^P?\d/.test(r)&&op&&/SCE|SDGE/.test(op)?'OCFA pole inspection list':'OpenStreetMap'}. Verify on site.</span>`].filter(Boolean).join('<br>')};
+window.poleBox=(host,html)=>{let el=host.querySelector('.polebox');if(!el){el=document.createElement('div');el.className='polebox';host.appendChild(el)}
+  el.innerHTML=`<button type="button" aria-label="Close">×</button>${html}`;el.hidden=false;el.firstChild.onclick=()=>{el.hidden=true}};
 window.mapKey=(host,id,groups,note)=>{
   if(!document.getElementById('keycss')){const s=document.createElement('style');s.id='keycss';s.textContent=css;document.head.appendChild(s)}
   let el=document.getElementById(id);if(el)el.remove();
@@ -31,6 +45,6 @@ window.mapKey=(host,id,groups,note)=>{
 // the site hazards drawn on the satellite, truck route and 3D tabs
 window.siteKeyGroups=(reach,extra,o)=>{const s=S;o=o||{};return [
   ['Crane',[[s.ring('#e0312b','solid','rgba(224,49,43,.15)'),`Crane reach (${reach} ft from the site pin)`],[s.ring(o.solid?'rgba(224,49,43,.7)':'#e0312b',o.solid?'solid':'dashed'),'Reach + 20 ft power-line clearance (OSHA)']]],
-  ['Overhead power',[[s.ln('#e0312b'),'Line inside the clearance — danger'],[s.ln('#f07a1a'),'Line 60 kV and up (transmission)'],[s.ln('#ffcf33'),'Line under 60 kV or voltage unknown'],[s.ln('#8a97a3','dashed'),'Circuit, overhead not confirmed'],[s.dot('#8a6a3a','#fff'),'Utility pole'],[s.dot('#e0312b','#fff'),'Pole inside the clearance'],...(o.ug?[[s.ln('#9b6bff','dotted'),'Underground (not a crane hazard; call 811 before digging)']]:[])]],
+  ['Overhead power',[[s.ln('#e0312b'),'Line inside the clearance — danger'],[s.ln('#f07a1a'),'Line 60 kV and up (transmission)'],[s.ln('#ffcf33'),'Line under 60 kV or voltage unknown'],[s.ln('#8a97a3','dashed'),'Circuit, overhead not confirmed'],[`<i><img src="${POLEICON('#d9661f')}" width="14" height="14" alt=""></i>`,'Utility pole (tap for details)'],[`<i><img src="${POLEICON('#f2b01e')}" width="14" height="14" alt=""></i>`,'Pole within 300 ft'],[`<i><img src="${POLEICON('#e0312b')}" width="14" height="14" alt=""></i>`,'Pole inside the clearance'],...(o.ug?[[s.ln('#9b6bff','dotted'),'Underground (not a crane hazard; call 811 before digging)']]:[])]],
   ...(extra||[])]};
 })();

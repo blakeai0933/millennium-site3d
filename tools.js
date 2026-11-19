@@ -46,7 +46,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>show(b.datase
 const AZ='https://atlas.microsoft.com';
 const api=async(path,params={},init)=>{const u=new URL(AZ+path);for(const[k,v]of Object.entries(params))if(v!=null&&v!=='')u.searchParams.set(k,v);u.searchParams.set('subscription-key',MKEY);
   const r=await fetch(u,init);if(!r.ok){let m='';try{m=(await r.json()).error.message}catch(e){}throw new Error(`Azure Maps ${r.status}${m?': '+m:''}`)}return r.json()};
-let map=null,src=null,routeSrc=null,mapReady=null;
+let map=null,src=null,routeSrc=null,mapReady=null,poleLayer=null;
 function amsg(t){$('amsg').hidden=!t;$('amsg').innerHTML=t||''}
 async function ensureMap(){if(mapReady)return mapReady;
   mapReady=(async()=>{if(!MKEY)throw new Error('The Azure Maps key is not set up yet (AZURE_MAPS_KEY secret).');
@@ -55,6 +55,7 @@ async function ensureMap(){if(mapReady)return mapReady;
       authOptions:{authType:'subscriptionKey',subscriptionKey:MKEY}});
     await new Promise(res=>map.events.add('ready',res));
     map.controls.add([new atlas.control.ZoomControl(),new atlas.control.StyleControl({mapStyles:['satellite_road_labels','satellite','road','grayscale_dark']})],{position:'top-right'});
+    await Promise.all([['pole','#d9661f',0],['pole-amb','#f2b01e',0],['pole-red','#e0312b',0],['tower','#a3361a',1],['tower-red','#e0312b',1]].map(([id,c,t])=>map.imageSprite.add(id,POLEICON(c,t)).catch(()=>{})));
     src=new atlas.source.DataSource();map.sources.add(src);
     routeSrc=new atlas.source.DataSource('route');map.sources.add(routeSrc);
     map.layers.add([
@@ -64,10 +65,12 @@ async function ensureMap(){if(mapReady)return mapReady;
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'ugline'],strokeColor:'#9b6bff',strokeWidth:2,strokeDashArray:[1,2.5]}),
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'qline'],strokeColor:['case',['get','bad'],'#e0312b','#8a97a3'],strokeWidth:2,strokeDashArray:[4,3]}),
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'line'],strokeColor:['case',['get','bad'],'#e0312b',['>=',['get','kv'],60],'#f07a1a','#ffcf33'],strokeWidth:['case',['get','bad'],3,2]}),
-      new atlas.layer.BubbleLayer(src,null,{filter:['==',['get','k'],'pole'],radius:4,color:['case',['get','bad'],'#e0312b','#8a6a3a'],strokeColor:'#fff',strokeWidth:1}),
+      poleLayer=new atlas.layer.SymbolLayer(src,null,{filter:['==',['get','k'],'pole'],iconOptions:{image:['case',['all',['get','bad'],['==',['get','t'],'t']],'tower-red',['get','bad'],'pole-red',['==',['get','t'],'t'],'tower',['get','amb'],'pole-amb','pole'],size:['interpolate',['linear'],['zoom'],15,0.35,18,0.6,20,0.8],allowOverlap:true,ignorePlacement:true},textOptions:{textField:['step',['zoom'],'',17,['get','lab']],offset:[0,1.5],color:'#ffffff',haloColor:'#000000',haloWidth:1.6,size:11,allowOverlap:true}}),
       new atlas.layer.LineLayer(routeSrc,null,{strokeColor:'#2b8be6',strokeWidth:6,lineJoin:'round',lineCap:'round'}),
       new atlas.layer.SymbolLayer(src,null,{filter:['==',['get','k'],'pin'],iconOptions:{image:'pin-blue',anchor:'bottom',allowOverlap:true},textOptions:{textField:['get','name'],offset:[0,-3.2],color:'#fff',haloColor:'#000',haloWidth:1.5,allowOverlap:true}})
     ]);
+    map.events.add('click',poleLayer,e=>{const s=e.shapes&&e.shapes[0];if(!s)return;const pr=s.getProperties?s.getProperties():s.properties;if(pr&&pr.info)poleBox($('am'),pr.info)});
+    map.events.add('mouseover',poleLayer,()=>map.getCanvasContainer().style.cursor='pointer');map.events.add('mouseout',poleLayer,()=>map.getCanvasContainer().style.cursor='');
     drawSite(+(LS.get('reach')||P.r||150));
     return map})();
   return mapReady.catch(e=>{mapReady=null;throw e})}
@@ -75,7 +78,7 @@ function drawSite(reach){if(!src)return;src.clear();const R=reach/FT,C=(reach+20
   const ring=r=>atlas.math.getRegularPolygonPath(center,r,64,'meters');
   src.add([new atlas.data.Feature(new atlas.data.Polygon([ring(R)]),{k:'reach'}),new atlas.data.Feature(new atlas.data.LineString(ring(C)),{k:'clr'}),new atlas.data.Feature(new atlas.data.Point(center),{k:'pin',name:P.n||'Site'})]);
   const pw=P.pw||{};
-  (pw.p||[]).forEach(([dx,dy,k])=>src.add(new atlas.data.Feature(new atlas.data.Point(m2ll(dx,dy)),{k:'pole',bad:Math.hypot(dx,dy)<=C,t:k})));
+  (pw.p||[]).forEach(a=>{const [dx,dy,k]=a,d=Math.hypot(dx,dy),dft=Math.round(d*FT);src.add(new atlas.data.Feature(new atlas.data.Point(m2ll(dx,dy)),{k:'pole',bad:d<=C,amb:dft<=300,t:k,lab:dft<=300?dft+' ft':'',info:poleHtml(a,reach)}))});
   (pw.l||[]).forEach(([pts,kv,f])=>{if(f==='u'&&!UGON)return;let near=1e9;for(let i=0;i<pts.length-1;i++){const[ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
     src.add(new atlas.data.Feature(new atlas.data.LineString(pts.map(([x,y])=>m2ll(x,y))),{k:f==='u'?'ugline':f==='q'?'qline':'line',kv:kv||0,bad:f!=='u'&&near<=C}))})}
 
