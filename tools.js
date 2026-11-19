@@ -82,6 +82,7 @@ async function mapTab(t){const side=$('side');
   if(map){map.resize();map.setTraffic(t==='traffic'?{flow:'relative',incidents:true}:{flow:'none',incidents:false});
     map.setStyle({style:t==='traffic'?'grayscale_dark':'satellite_road_labels'});
     $('legendT')&&$('legendT').remove();
+    siteKey(t);
     if(t==='traffic'){const lg=document.createElement('div');lg.className='legend';lg.id='legendT';lg.innerHTML='Traffic vs normal: <i style="background:#2ecc71"></i>flowing<i style="background:#f1c40f"></i>slow<i style="background:#e74c3c"></i>heavy';$('am').appendChild(lg)}
     if(t==='sat'||t==='traffic')map.setCamera({center:[lon,lat],zoom:t==='sat'?18:14,type:'ease',duration:600});
     if(routeSrc&&t!=='route')routeSrc.clear()}
@@ -91,8 +92,10 @@ async function mapTab(t){const side=$('side');
   else if(t==='wx')weatherPanel();
 }
 
+function siteKey(t){if(t!=='sat'&&t!=='route'){$('keyS')&&$('keyS').remove();return}const S=KEYSW,reach=+(LS.get('reach')||P.r||150);
+  mapKey($('am'),'keyS',siteKeyGroups(reach,[['Site',[[S.dot('#2f6f9f','#fff'),'Site pin'],...(t==='route'?[[S.ln('#2b8be6','solid',5),'Planned truck route']]:[])]]]),'Power lines and poles come from OpenStreetMap and utility maps and are incomplete. Verify on the site walk.')}
 // ---------- Satellite ----------
-function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>document.querySelectorAll('#sreach button').forEach(b=>b.onclick=()=>{LS.set('reach',+b.dataset.r);drawSite(+b.dataset.r);$('side').innerHTML=satPanel()}),0);
+function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>document.querySelectorAll('#sreach button').forEach(b=>b.onclick=()=>{LS.set('reach',+b.dataset.r);drawSite(+b.dataset.r);siteKey(tab);$('side').innerHTML=satPanel()}),0);
   const pw=P.pw||{},C=(reach+20)/FT;const poles=(pw.p||[]).filter(([dx,dy])=>Math.hypot(dx,dy)<=C).length;
   return `<h3>Live satellite</h3><div class="dim">Microsoft/Azure Maps imagery streamed at full detail. Zoom anywhere around the site.</div>
   <h4>Crane reach</h4><div class="seg" id="sreach">${[100,150,200,250].map(r=>`<button data-r="${r}" class="${r===reach?'on':''}">${r} ft</button>`).join('')}</div>

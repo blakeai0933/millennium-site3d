@@ -107,5 +107,10 @@ viewer.screenSpaceEventHandler.setInputAction(e=>{if(!meas)return;const p=viewer
     home:()=>{pivot={lat,lng:lon,alt:h0+15};viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target,90),{duration:1.2,offset:new Cesium.HeadingPitchRange(viewer.camera.heading,Rd(-32),420)})},
     minAlt:()=>h0,
     heading:()=>D(viewer.camera.heading)})}
+// map key for the 3D city
+const key3d=()=>{const S=KEYSW;mapKey(cz,'key3',siteKeyGroups(REACH,[
+  ['In the 3D view',[[S.bar('#f2b01e'),'Yellow post: crane reach height at the site pin'],[S.dot('#2f6f9f','#fff'),'Site pin'],[S.dot('#ffff00'),'Measuring points (Measure tool)']]]],{solid:true}),
+  'Red dome shows how far the crane reaches in every direction. Google 3D can be months old; verify on site.')};
+key3d();document.querySelectorAll('#reach button').forEach(b=>b.addEventListener('click',key3d));
 setView(P.v==='top'?'top':'fly');
 };

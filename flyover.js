@@ -39,6 +39,8 @@ async function start(P){
   let reachEl=null;
   const drawReach=r=>{try{if(reachEl)reachEl.remove();reachEl=new lib.Polygon3DElement({altitudeMode:'CLAMP_TO_GROUND',fillColor:'rgba(224,49,43,0.18)',strokeColor:'#e0312b',strokeWidth:3,drawsOccludedSegments:true});const pts=ring(r);if('path' in reachEl)reachEl.path=pts;else reachEl.outerCoordinates=pts;map.append(reachEl)}catch(e){}};
   drawReach(reach);
+  const keyF=r=>{const S=KEYSW;mapKey($('flym'),'keyF',[['Site',[[S.ring('#e0312b','solid','rgba(224,49,43,.18)'),`Crane reach (${r} ft from the site pin)`],[S.dot('#e0312b','#fff'),'Site pin']]]],'Power lines are shown on the 3D city and Satellite tabs.')};
+  keyF(reach);
 
   const cam=(o)=>({center:site,range:o.range,tilt:o.tilt,heading:o.heading});
   const stop=()=>{try{map.stopCameraAnimation()}catch(e){}};
@@ -58,7 +60,7 @@ async function start(P){
   $('fNear').onclick=()=>{rng=Math.max(120,rng*0.6);fly({range:rng,tilt:map.tilt||60,heading:map.heading||0},1500)};
   $('fFar').onclick=()=>{rng=Math.min(4000,rng/0.6);fly({range:rng,tilt:map.tilt||60,heading:map.heading||0},1500)};
   $('fLabels').onchange=e=>{map.mode=e.target.checked?MM.HYBRID:MM.SATELLITE};
-  side.querySelectorAll('#freach button').forEach(b=>b.onclick=()=>{side.querySelectorAll('#freach button').forEach(x=>x.classList.toggle('on',x===b));drawReach(+b.dataset.r)});
+  side.querySelectorAll('#freach button').forEach(b=>b.onclick=()=>{side.querySelectorAll('#freach button').forEach(x=>x.classList.toggle('on',x===b));drawReach(+b.dataset.r);keyF(+b.dataset.r)});
   map.addEventListener('gmp-click',stop);
   // toolbar on the right: hold to move, turn, tilt, zoom or raise the camera
   window.makeNav3D&&makeNav3D($('flym'),{
