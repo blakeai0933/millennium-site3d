@@ -1,0 +1,24 @@
+name: Deploy to Azure Static Web Apps
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Write the Google key into config.js (kept in a GitHub secret, never in the repo)
+        env:
+          GOOGLE_MAPS_KEY: ${{ secrets.GOOGLE_MAPS_KEY }}
+        run: |
+          printf "window.SITE3D={googleKey:'%s'};\n" "$GOOGLE_MAPS_KEY" > config.js
+      - name: Deploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: /
+          output_location: ""
+          skip_app_build: true
+          skip_api_build: true

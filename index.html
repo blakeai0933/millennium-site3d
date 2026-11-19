@@ -59,7 +59,7 @@ label.ck{display:flex;align-items:center;gap:5px;font-size:12px;color:#dbe4ea}
 const $=id=>document.getElementById(id),msg=$('msg');
 const FT=3.28084;
 // everything about the site arrives in the link's #hash, which never reaches the web server
-let P={};try{P=JSON.parse(decodeURIComponent(atob(location.hash.slice(1).replace(/-/g,'+').replace(/_/g,'/'))))}catch(e){}
+let P={};const HS=location.hash.length>1?location.hash:(()=>{try{return sessionStorage.getItem('site3d-hash')||''}catch(e){return ''}})();try{P=JSON.parse(decodeURIComponent(atob(HS.slice(1).replace(/-/g,'+').replace(/_/g,'/'))))}catch(e){}
 const lat=+P.lat,lon=+P.lon;
 if(!isFinite(lat)||!isFinite(lon)){msg.textContent='Open this page from a job card on the Bid Pipeline Map.';return}
 let REACH=[100,150,200,250].includes(+P.r)?+P.r:150;
