@@ -41,9 +41,9 @@ const R=()=>REACH/FT,CLR=()=>(REACH+20)/FT;
 function drawPower(){pwE.forEach(e=>viewer.entities.remove(e));pwE.length=0;const risky=[];
   (PW.p||[]).forEach(([dx,dy,k])=>{const d=Math.hypot(dx,dy),bad=d<=CLR(),hgt=k==='t'?30:12.2;if(bad)risky.push(`${k==='t'?'tower':'pole'} ${Math.round(d*FT)} ft`);
     pwE.push(viewer.entities.add({position:at(dx,dy,hgt/2),cylinder:{length:hgt,topRadius:k==='t'?1.2:.22,bottomRadius:k==='t'?2.5:.22,material:bad?Cesium.Color.RED:Cesium.Color.fromCssColorString('#8a6a3a')}}))});
-  (PW.l||[]).forEach(([pts,kv])=>{const z=kv&&kv>=60?30:11;let near=1e9;for(let i=0;i<pts.length-1;i++){const [ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
-    const bad=near<=CLR();if(bad)risky.push(`${kv?kv+' kV ':''}line ${Math.round(near*FT)} ft`);
-    pwE.push(viewer.entities.add({polyline:{positions:pts.map(([x,y])=>at(x,y,z)),width:bad?3:2,material:bad?Cesium.Color.RED:Cesium.Color.fromCssColorString(kv>=60?'#f07a1a':'#ffcf33')}}))});
+  (PW.l||[]).forEach(([pts,kv,f])=>{const ugl=f==='u';if(ugl&&!($('ckUg')&&$('ckUg').checked))return;const z=ugl?0.4:kv&&kv>=60?30:11;let near=1e9;for(let i=0;i<pts.length-1;i++){const [ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
+    const bad=!ugl&&near<=CLR();if(bad)risky.push(`${f==='q'?'possible ':''}${kv?kv+' kV ':''}line ${Math.round(near*FT)} ft`);
+    pwE.push(viewer.entities.add({polyline:{positions:pts.map(([x,y])=>at(x,y,z)),width:bad?3:2,clampToGround:ugl,material:bad?Cesium.Color.RED:ugl?new Cesium.PolylineDashMaterialProperty({color:Cesium.Color.fromCssColorString('#9b6bff'),dashLength:8}):f==='q'?new Cesium.PolylineDashMaterialProperty({color:Cesium.Color.fromCssColorString('#8a97a3'),dashLength:14}):Cesium.Color.fromCssColorString(kv>=60?'#f07a1a':'#ffcf33')}}))});
   pwE.forEach(e=>e.show=$('ckPw').checked);return risky}
 function drawReach(){reachE.forEach(e=>viewer.entities.remove(e));reachE.length=0;
   reachE.push(viewer.entities.add({position:center,ellipse:{semiMajorAxis:R(),semiMinorAxis:R(),height:h0+.4,material:Cesium.Color.RED.withAlpha(.12),outline:true,outlineColor:Cesium.Color.RED,outlineWidth:2}}));
@@ -77,6 +77,7 @@ const markReach=()=>document.querySelectorAll('#reach button').forEach(b=>b.clas
 document.querySelectorAll('#reach button').forEach(b=>b.onclick=()=>{REACH=+b.dataset.r;markReach();info()});
 $('ckPw').onchange=()=>pwE.forEach(e=>e.show=$('ckPw').checked);
 $('ckReach').onchange=()=>reachE.forEach(e=>e.show=$('ckReach').checked);
+$('ckUg').checked=false;$('ckUg').onchange=()=>{info();key3d()};
 
 // measure: tap two points for horizontal distance and height difference; one point gives height above site grade
 let meas=false,mpts=[],mE=[];
@@ -109,7 +110,7 @@ viewer.screenSpaceEventHandler.setInputAction(e=>{if(!meas)return;const p=viewer
     heading:()=>D(viewer.camera.heading)})}
 // map key for the 3D city
 const key3d=()=>{const S=KEYSW;mapKey(cz,'key3',siteKeyGroups(REACH,[
-  ['In the 3D view',[[S.bar('#f2b01e'),'Yellow post: crane reach height at the site pin'],[S.dot('#2f6f9f','#fff'),'Site pin'],[S.dot('#ffff00'),'Measuring points (Measure tool)']]]],{solid:true}),
+  ['In the 3D view',[[S.bar('#f2b01e'),'Yellow post: crane reach height at the site pin'],[S.dot('#2f6f9f','#fff'),'Site pin'],[S.dot('#ffff00'),'Measuring points (Measure tool)']]]],{solid:true,ug:$('ckUg').checked}),
   'Red dome shows how far the crane reaches in every direction. Google 3D can be months old; verify on site.')};
 key3d();document.querySelectorAll('#reach button').forEach(b=>b.addEventListener('click',key3d));
 setView(P.v==='top'?'top':'fly');

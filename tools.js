@@ -61,6 +61,8 @@ async function ensureMap(){if(mapReady)return mapReady;
       new atlas.layer.PolygonLayer(src,null,{filter:['==',['get','k'],'reach'],fillColor:'rgba(224,49,43,0.12)'}),
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'reach'],strokeColor:'#e0312b',strokeWidth:2}),
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'clr'],strokeColor:'#e0312b',strokeWidth:1.2,strokeDashArray:[3,2]}),
+      new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'ugline'],strokeColor:'#9b6bff',strokeWidth:2,strokeDashArray:[1,2.5]}),
+      new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'qline'],strokeColor:['case',['get','bad'],'#e0312b','#8a97a3'],strokeWidth:2,strokeDashArray:[4,3]}),
       new atlas.layer.LineLayer(src,null,{filter:['==',['get','k'],'line'],strokeColor:['case',['get','bad'],'#e0312b',['>=',['get','kv'],60],'#f07a1a','#ffcf33'],strokeWidth:['case',['get','bad'],3,2]}),
       new atlas.layer.BubbleLayer(src,null,{filter:['==',['get','k'],'pole'],radius:4,color:['case',['get','bad'],'#e0312b','#8a6a3a'],strokeColor:'#fff',strokeWidth:1}),
       new atlas.layer.LineLayer(routeSrc,null,{strokeColor:'#2b8be6',strokeWidth:6,lineJoin:'round',lineCap:'round'}),
@@ -74,8 +76,8 @@ function drawSite(reach){if(!src)return;src.clear();const R=reach/FT,C=(reach+20
   src.add([new atlas.data.Feature(new atlas.data.Polygon([ring(R)]),{k:'reach'}),new atlas.data.Feature(new atlas.data.LineString(ring(C)),{k:'clr'}),new atlas.data.Feature(new atlas.data.Point(center),{k:'pin',name:P.n||'Site'})]);
   const pw=P.pw||{};
   (pw.p||[]).forEach(([dx,dy,k])=>src.add(new atlas.data.Feature(new atlas.data.Point(m2ll(dx,dy)),{k:'pole',bad:Math.hypot(dx,dy)<=C,t:k})));
-  (pw.l||[]).forEach(([pts,kv])=>{let near=1e9;for(let i=0;i<pts.length-1;i++){const[ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
-    src.add(new atlas.data.Feature(new atlas.data.LineString(pts.map(([x,y])=>m2ll(x,y))),{k:'line',kv:kv||0,bad:near<=C}))})}
+  (pw.l||[]).forEach(([pts,kv,f])=>{if(f==='u'&&!UGON)return;let near=1e9;for(let i=0;i<pts.length-1;i++){const[ax,ay]=pts[i],[bx,by]=pts[i+1],L=(bx-ax)**2+(by-ay)**2,t=L?Math.max(0,Math.min(1,(-ax*(bx-ax)-ay*(by-ay))/L)):0;near=Math.min(near,Math.hypot(ax+t*(bx-ax),ay+t*(by-ay)))}
+    src.add(new atlas.data.Feature(new atlas.data.LineString(pts.map(([x,y])=>m2ll(x,y))),{k:f==='u'?'ugline':f==='q'?'qline':'line',kv:kv||0,bad:f!=='u'&&near<=C}))})}
 
 async function mapTab(t){const side=$('side');
   try{await ensureMap();amsg('')}catch(e){amsg(esc(e.message||e));}
@@ -93,16 +95,18 @@ async function mapTab(t){const side=$('side');
 }
 
 function siteKey(t){if(t!=='sat'&&t!=='route'){$('keyS')&&$('keyS').remove();return}const S=KEYSW,reach=+(LS.get('reach')||P.r||150);
-  mapKey($('am'),'keyS',siteKeyGroups(reach,[['Site',[[S.dot('#2f6f9f','#fff'),'Site pin'],...(t==='route'?[[S.ln('#2b8be6','solid',5),'Planned truck route']]:[])]]]),'Power lines and poles come from OpenStreetMap and utility maps and are incomplete. Verify on the site walk.')}
+  mapKey($('am'),'keyS',siteKeyGroups(reach,[['Site',[[S.dot('#2f6f9f','#fff'),'Site pin'],...(t==='route'?[[S.ln('#2b8be6','solid',5),'Planned truck route']]:[])]]],{ug:UGON}),'Power lines and poles come from OpenStreetMap and utility maps and are incomplete. Verify on the site walk.')}
 // ---------- Satellite ----------
-function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>document.querySelectorAll('#sreach button').forEach(b=>b.onclick=()=>{LS.set('reach',+b.dataset.r);drawSite(+b.dataset.r);siteKey(tab);$('side').innerHTML=satPanel()}),0);
+function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>{const u=$('sUg');if(u)u.onchange=()=>{UGON=u.checked;drawSite(+(LS.get('reach')||P.r||150));siteKey(tab)}},0);setTimeout(()=>document.querySelectorAll('#sreach button').forEach(b=>b.onclick=()=>{LS.set('reach',+b.dataset.r);drawSite(+b.dataset.r);siteKey(tab);$('side').innerHTML=satPanel()}),0);
   const pw=P.pw||{},C=(reach+20)/FT;const poles=(pw.p||[]).filter(([dx,dy])=>Math.hypot(dx,dy)<=C).length;
   return `<h3>Live satellite</h3><div class="dim">Microsoft/Azure Maps imagery streamed at full detail. Zoom anywhere around the site.</div>
   <h4>Crane reach</h4><div class="seg" id="sreach">${[100,150,200,250].map(r=>`<button data-r="${r}" class="${r===reach?'on':''}">${r} ft</button>`).join('')}</div>
   <div class="row">${poles?`<span class="flag red">Conflict</span>${poles} mapped pole${poles>1?'s':''} inside ${reach} ft + 20 ft`:`<span class="flag">Clear</span>No mapped poles inside ${reach} ft + 20 ft`}</div>
+  <label class="ck" style="margin-top:10px"><input type="checkbox" id="sUg" ${UGON?'checked':''}> Show underground power (off by default)</label>
   <div class="note">Red ring: reach from the site pin. Dashed ring: plus the 20 ft line clearance (OSHA 1926.1408). Poles and lines come from OpenStreetMap and utility maps and are incomplete. Verify on site. Satellite photos can be months or years old.</div>`}
 
 // ---------- Truck route ----------
+let UGON=false; // underground power: always starts off
 const DEF_TRUCK={lbs:80000,load:48000,trailer:48,len:70,h:13.5,w:8.5,haz:''};
 function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const auto=autoFrom;autoFrom=null;const from=auto||LS.get('from')||{name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};
   const START=[{k:'office',name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon},...FABS];

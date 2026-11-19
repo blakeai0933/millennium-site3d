@@ -31,6 +31,6 @@ window.mapKey=(host,id,groups,note)=>{
 // the site hazards drawn on the satellite, truck route and 3D tabs
 window.siteKeyGroups=(reach,extra,o)=>{const s=S;o=o||{};return [
   ['Crane',[[s.ring('#e0312b','solid','rgba(224,49,43,.15)'),`Crane reach (${reach} ft from the site pin)`],[s.ring(o.solid?'rgba(224,49,43,.7)':'#e0312b',o.solid?'solid':'dashed'),'Reach + 20 ft power-line clearance (OSHA)']]],
-  ['Overhead power',[[s.ln('#e0312b'),'Line inside the clearance — danger'],[s.ln('#f07a1a'),'Line 60 kV and up (transmission)'],[s.ln('#ffcf33'),'Line under 60 kV or voltage unknown'],[s.dot('#8a6a3a','#fff'),'Utility pole'],[s.dot('#e0312b','#fff'),'Pole inside the clearance']]],
+  ['Overhead power',[[s.ln('#e0312b'),'Line inside the clearance — danger'],[s.ln('#f07a1a'),'Line 60 kV and up (transmission)'],[s.ln('#ffcf33'),'Line under 60 kV or voltage unknown'],[s.ln('#8a97a3','dashed'),'Circuit, overhead not confirmed'],[s.dot('#8a6a3a','#fff'),'Utility pole'],[s.dot('#e0312b','#fff'),'Pole inside the clearance'],...(o.ug?[[s.ln('#9b6bff','dotted'),'Underground (not a crane hazard; call 811 before digging)']]:[])]],
   ...(extra||[])]};
 })();
