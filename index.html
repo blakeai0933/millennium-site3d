@@ -68,7 +68,7 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
 @media (max-width:760px){
   #tools,#flyp{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,48%)}
   #side,#flyside{border-left:0;border-top:1px solid var(--line)}
-  #info{font-size:11px;padding:6px 8px}#info .note{display:none}#meas{top:auto;bottom:12px}
+  #info{font-size:11px;padding:6px 8px}#info .note{display:none}#meas{top:auto;bottom:12px;right:auto;left:12px;max-width:calc(100% - 90px)}
 }
 </style>
 </head>
@@ -92,6 +92,7 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
   </footer>
 </div>
 <script src="config.js"></script>
+<script src="nav3d.js"></script>
 <script src="site3d.js"></script>
 <script src="flyover.js"></script>
 <script src="tools.js"></script>

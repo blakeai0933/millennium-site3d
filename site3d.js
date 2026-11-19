@@ -89,5 +89,21 @@ viewer.screenSpaceEventHandler.setInputAction(e=>{if(!meas)return;const p=viewer
     $('meas').innerHTML=`Horizontal: <b>${Math.round(g*FT)} ft</b> · Rise: <b>${Math.round(dz*FT)} ft</b><br>Straight line: <b>${Math.round(Math.hypot(g,dz)*FT)} ft</b><div style="color:#9fb0bf">Measured on Google's 3D model; expect a few feet of error.</div>`}
 },Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
+// toolbar on the right: hold to move, turn, tilt, zoom or raise the camera
+{const D=Cesium.Math.toDegrees,Rd=Cesium.Math.toRadians,cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+  let pivot={lat,lng:lon,alt:h0+15};
+  const toLLA=c=>{const g=Cesium.Cartographic.fromCartesian(c);return {lat:D(g.latitude),lng:D(g.longitude),alt:g.height}};
+  const free=()=>document.querySelectorAll('#views button').forEach(b=>b.classList.toggle('on',b.dataset.v==='free'));
+  window.makeNav3D&&makeNav3D(cz,{
+    get:()=>{const cam=viewer.camera,cv=viewer.scene.canvas;let p=null;
+      try{p=viewer.scene.pickPosition(new Cesium.Cartesian2(cv.clientWidth/2,cv.clientHeight/2))}catch(e){}
+      if(p&&isFinite(p.x)&&Cesium.Cartesian3.distance(cam.positionWC,p)<20000)pivot=toLLA(p);
+      const C=Cesium.Cartesian3.fromDegrees(pivot.lng,pivot.lat,pivot.alt);
+      return {h:(D(cam.heading)+360)%360,t:cl(D(cam.pitch)+90,0,88),r:Cesium.Cartesian3.distance(cam.positionWC,C),lat:pivot.lat,lng:pivot.lng,alt:pivot.alt}},
+    set:s=>{pivot={lat:s.lat,lng:s.lng,alt:s.alt};viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(s.lng,s.lat,s.alt),new Cesium.HeadingPitchRange(Rd(s.h),Rd(s.t-90),s.r));viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY)},
+    stop:()=>{stopSpin();viewer.camera.cancelFlight();viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);free()},
+    home:()=>{pivot={lat,lng:lon,alt:h0+15};viewer.camera.flyToBoundingSphere(new Cesium.BoundingSphere(target,90),{duration:1.2,offset:new Cesium.HeadingPitchRange(viewer.camera.heading,Rd(-32),420)})},
+    minAlt:()=>h0,
+    heading:()=>D(viewer.camera.heading)})}
 setView(P.v==='top'?'top':'fly');
 };

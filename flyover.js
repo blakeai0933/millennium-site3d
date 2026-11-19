@@ -28,7 +28,7 @@ async function start(P){
   const lib=await google.maps.importLibrary('maps3d');
   const MM=lib.MapMode||{SATELLITE:'SATELLITE',HYBRID:'HYBRID'};
   const site={lat,lng,altitude:0};
-  const map=new lib.Map3DElement({center:{lat,lng,altitude:0},range:2600,tilt:0,heading:0,mode:MM.HYBRID});
+  const map=new lib.Map3DElement({center:{lat,lng,altitude:0},range:2600,tilt:0,heading:0,mode:MM.HYBRID,defaultUIHidden:true});
   $('flym').appendChild(map);
   window.FLY3D=map;
   m.hidden=true;
@@ -60,6 +60,13 @@ async function start(P){
   $('fLabels').onchange=e=>{map.mode=e.target.checked?MM.HYBRID:MM.SATELLITE};
   side.querySelectorAll('#freach button').forEach(b=>b.onclick=()=>{side.querySelectorAll('#freach button').forEach(x=>x.classList.toggle('on',x===b));drawReach(+b.dataset.r)});
   map.addEventListener('gmp-click',stop);
+  // toolbar on the right: hold to move, turn, tilt, zoom or raise the camera
+  window.makeNav3D&&makeNav3D($('flym'),{
+    get:()=>{const c=map.center||site;return {h:((+map.heading||0)+360)%360,t:+map.tilt||0,r:+map.range||rng,lat:+c.lat,lng:+c.lng,alt:+c.altitude||0}},
+    set:s=>{map.center={lat:s.lat,lng:s.lng,altitude:s.alt||0};map.heading=s.h;map.tilt=s.t;map.range=s.r},
+    stop,
+    home:()=>fly({range:rng,tilt:60,heading:+map.heading||0},1500),
+    heading:()=>+map.heading||0});
 
   aerial(P,key);
 }
@@ -67,7 +74,7 @@ async function start(P){
 function panelHtml(P,hasKey){
   const reach=[100,150,200,250].includes(+P.r)?+P.r:150;
   const ge=`https://earth.google.com/web/@${(+P.lat).toFixed(6)},${(+P.lon).toFixed(6)},0a,450d,35y,0h,60t,0r`;
-  return `<h3>Flyover</h3><div class="dim">Google's photorealistic 3D city. Drag to look around; the flyover stops when you click the map.</div>
+  return `<h3>Flyover</h3><div class="dim">Google's photorealistic 3D city. Use the toolbar on the right to move, turn, tilt and zoom; hold a button to keep going. Keys: arrows move, Q/E turn, R/F tilt, +/− zoom.</div>
   ${hasKey?`<div class="row"><button class="btn pri" id="fPlay" type="button">Play flyover</button><button class="btn" id="fOrbit" type="button">Orbit</button><button class="btn" id="fStop" type="button">Stop</button></div>
   <h4>Oblique views</h4>
   <div class="row">
