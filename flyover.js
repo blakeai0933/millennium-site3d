@@ -37,7 +37,7 @@ async function start(P){
   try{const mk=new lib.Marker3DElement({position:{lat,lng,altitude:35},altitudeMode:'RELATIVE_TO_GROUND',extruded:true,label:P.n||'Site'});map.append(mk)}catch(e){}
   const ring=r=>{const R=r/FT/111320,o=[];for(let i=0;i<=72;i++){const a=i/72*2*Math.PI;o.push({lat:lat+R*Math.sin(a),lng:lng+R*Math.cos(a)/Math.cos(lat*Math.PI/180)})}return o};
   let reachEl=null;
-  const drawReach=r=>{try{if(reachEl)reachEl.remove();reachEl=new lib.Polygon3DElement({altitudeMode:'CLAMP_TO_GROUND',fillColor:'rgba(224,49,43,0.18)',strokeColor:'#e0312b',strokeWidth:3,drawsOccludedSegments:true});reachEl.outerCoordinates=ring(r);map.append(reachEl)}catch(e){}};
+  const drawReach=r=>{try{if(reachEl)reachEl.remove();reachEl=new lib.Polygon3DElement({altitudeMode:'CLAMP_TO_GROUND',fillColor:'rgba(224,49,43,0.18)',strokeColor:'#e0312b',strokeWidth:3,drawsOccludedSegments:true});const pts=ring(r);if('path' in reachEl)reachEl.path=pts;else reachEl.outerCoordinates=pts;map.append(reachEl)}catch(e){}};
   drawReach(reach);
 
   const cam=(o)=>({center:site,range:o.range,tilt:o.tilt,heading:o.heading});
