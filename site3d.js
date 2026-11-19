@@ -24,10 +24,12 @@ catch(e){msg.innerHTML='Google 3D tiles did not load: '+(e.message||e)+'<br><spa
 const C0=Cesium.Cartesian3.fromDegrees(lon,lat,0);
 let h0=0;
 viewer.camera.setView({destination:Cesium.Cartesian3.fromDegrees(lon,lat,700),orientation:{pitch:-Cesium.Math.PI_OVER_TWO}});
-try{const [c]=await viewer.scene.clampToHeightMostDetailed([Cesium.Cartesian3.fromDegrees(lon,lat,400)]);if(c)h0=Cesium.Cartographic.fromCartesian(c).height}catch(e){}
+// don't hold the view hostage to the most detailed tiles: give the ground sampling a few seconds at most
+const within=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+try{const [c]=await within(viewer.scene.clampToHeightMostDetailed([Cesium.Cartesian3.fromDegrees(lon,lat,400)]),6000);if(c)h0=Cesium.Cartographic.fromCartesian(c).height}catch(e){}
 // the pin often sits on a roof: take the lowest of a few samples around it as grade
 try{const ring=[];for(let a=0;a<8;a++){const d=25/111320;ring.push(Cesium.Cartesian3.fromDegrees(lon+Math.cos(a*Math.PI/4)*d/Math.cos(lat*Math.PI/180),lat+Math.sin(a*Math.PI/4)*d,400))}
-  const rs=await viewer.scene.clampToHeightMostDetailed(ring);const hs=rs.filter(Boolean).map(c=>Cesium.Cartographic.fromCartesian(c).height);if(hs.length)h0=Math.min(h0,...hs)}catch(e){}
+  const rs=await within(viewer.scene.clampToHeightMostDetailed(ring),4000);const hs=rs.filter(Boolean).map(c=>Cesium.Cartographic.fromCartesian(c).height);if(hs.length)h0=Math.min(h0,...hs)}catch(e){}
 msg.hidden=true;
 const at=(dx,dy,dz)=>{const m=Math.cos(lat*Math.PI/180);return Cesium.Cartesian3.fromDegrees(lon+dx/111320/m,lat+dy/111320,h0+dz)};
 const center=at(0,0,0);
