@@ -14,6 +14,8 @@ document.title=(P.n||'Site')+' · Site Viewer';
 const CFG=window.SITE3D||{};
 const MKEY=CFG.azureMapsKey||'';
 const OFFICE=Array.isArray(P.o)?{lat:+P.o[0],lon:+P.o[1],name:'San Clemente office'}:{lat:33.4269,lon:-117.6120,name:'San Clemente office'};
+const FABS=(Array.isArray(P.fab)?P.fab:[]).filter(f=>Array.isArray(f)&&isFinite(+f[2])&&isFinite(+f[3])).map(([k,n,la,lo])=>({k:String(k),name:String(n),lat:+la,lon:+lo}));
+let autoFrom=FABS.find(f=>f.k===P.f)||null;
 const LS={get:k=>{try{return JSON.parse(localStorage.getItem('site3d-'+k))}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem('site3d-'+k,JSON.stringify(v))}catch(e){}}};
 const FT=3.28084;
 const m2ll=(dx,dy)=>[lon+dx/111320/Math.cos(lat*Math.PI/180),lat+dy/111320];
@@ -98,10 +100,11 @@ function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>docu
 
 // ---------- Truck route ----------
 const DEF_TRUCK={lbs:80000,load:48000,trailer:48,len:70,h:13.5,w:8.5,haz:''};
-function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const from=LS.get('from')||{name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};
+function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const auto=autoFrom;autoFrom=null;const from=auto||LS.get('from')||{name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};
   $('side').innerHTML=`<h3>Truck route to the site</h3>
   <div class="fld"><label for="rFrom">From</label><div><input id="rFrom" value="${esc(from.name)}" autocomplete="off" spellcheck="false"><div class="sugg" id="rSugg"></div></div></div>
   <div class="row"><button class="btn" id="rOffice" type="button">Use San Clemente office</button><button class="btn" id="rFind" type="button">Find address</button></div>
+  ${FABS.length?`<div class="row" id="rFabs">${FABS.map((f,i)=>`<button class="btn" type="button" data-i="${i}">${esc(f.name)}</button>`).join('')}</div>`:''}
   <h4>Truck</h4>
   <div class="fld">
     <label for="tLbs">Gross weight (lbs)</label><input id="tLbs" inputmode="numeric" value="${T.lbs}">
@@ -121,6 +124,7 @@ function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const from
     catch(e){$('rSugg').innerHTML=`<span class="dim">${esc(e.message)}</span>`}};
   $('rFind').onclick=sugg;$('rFrom').onkeydown=e=>{if(e.key==='Enter')sugg()};
   $('rOffice').onclick=()=>{FROM={name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};LS.set('from',FROM);$('rFrom').value=FROM.name;$('rSugg').innerHTML=''};
+  document.querySelectorAll('#rFabs button').forEach(b=>b.onclick=()=>{const f=FABS[+b.dataset.i];FROM={name:f.name,lat:f.lat,lon:f.lon};LS.set('from',FROM);$('rFrom').value=FROM.name;$('rSugg').innerHTML='';$('rGo').click()});
   $('rGo').onclick=async()=>{const T2={lbs:+$('tLbs').value||DEF_TRUCK.lbs,len:+$('tLen').value||DEF_TRUCK.len,h:+$('tH').value||DEF_TRUCK.h,w:+$('tW').value||DEF_TRUCK.w,haz:$('tHaz').value};LS.set('truck',T2);
     const out=$('rOut');out.innerHTML='<div class="dim">Planning the truck route…</div>';
     try{const q={'api-version':'1.0',query:`${FROM.lat},${FROM.lon}:${lat},${lon}`,travelMode:'truck',vehicleCommercial:'true',
@@ -137,6 +141,7 @@ function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const from
         <div class="note">Truck routing uses the weight, length, height and width above to stay off roads, bridges and tunnels the truck can't legally use. Check the last block into the site yourself: gate, turn radius, overhead lines and where the truck stages are not in the map data.</div>
         ${steps.length?`<h4>Directions</h4><ol class="steps">${steps.map(x=>`<li>${esc(x.message)}</li>`).join('')}</ol>`:''}`}
     catch(e){out.innerHTML=`<div class="alert">${esc(e.message||e)}</div>`}};
+  if(auto&&map)$('rGo').click();
 }
 
 // ---------- Traffic ----------
