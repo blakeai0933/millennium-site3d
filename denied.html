@@ -1,9 +1,0 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Millennium Site Viewer</title>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0e151b;color:#e8eef3;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px}main{max-width:440px}a{color:#7cc0ff}</style></head>
-<body><main><h1 style="font-size:20px">Not invited yet</h1>
-<p>The Millennium Site Viewer is limited to invited Millennium staff. Ask Blake for an invite link, open it, and sign in with your Millennium Microsoft account.</p>
-<p id="who" style="color:#9fb0bf"></p>
-<p><a href="/.auth/logout?post_logout_redirect_uri=/open.html">Sign in with a different account</a></p></main>
-<script>fetch('/.auth/me',{cache:'no-store'}).then(r=>r.json()).then(j=>{const p=j&&j.clientPrincipal;if(p)document.getElementById('who').textContent='Signed in as '+p.userDetails+'.'}).catch(()=>{})</script>
-</body></html>

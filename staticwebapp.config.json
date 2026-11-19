@@ -1,15 +1,7 @@
 {
   "routes": [
-    { "route": "/open.html", "allowedRoles": ["anonymous", "authenticated"] },
-    { "route": "/denied.html", "allowedRoles": ["anonymous", "authenticated"] },
-    { "route": "/.auth/login/github", "statusCode": 404 },
-    { "route": "/.auth/login/twitter", "statusCode": 404 },
-    { "route": "/*", "allowedRoles": ["millennium"] }
+    { "route": "/.auth/*", "statusCode": 404 }
   ],
-  "responseOverrides": {
-    "401": { "redirect": "/.auth/login/aad?post_login_redirect_uri=/open.html", "statusCode": 302 },
-    "403": { "rewrite": "/denied.html", "statusCode": 403 }
-  },
   "globalHeaders": {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Robots-Tag": "noindex, nofollow",
