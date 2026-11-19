@@ -8,11 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Write the Google key into config.js (kept in a GitHub secret, never in the repo)
+      - name: Write the map keys into config.js (kept in GitHub secrets, never in the repo)
         env:
           GOOGLE_MAPS_KEY: ${{ secrets.GOOGLE_MAPS_KEY }}
+          AZURE_MAPS_KEY: ${{ secrets.AZURE_MAPS_KEY }}
         run: |
-          printf "window.SITE3D={googleKey:'%s'};\n" "$GOOGLE_MAPS_KEY" > config.js
+          printf "window.SITE3D={googleKey:'%s',azureMapsKey:'%s'};\n" "$GOOGLE_MAPS_KEY" "$AZURE_MAPS_KEY" > config.js
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
