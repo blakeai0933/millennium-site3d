@@ -102,11 +102,16 @@ function satPanel(){const reach=+(LS.get('reach')||P.r||150);setTimeout(()=>docu
 // ---------- Truck route ----------
 const DEF_TRUCK={lbs:80000,load:48000,trailer:48,len:70,h:13.5,w:8.5,haz:''};
 function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const auto=autoFrom;autoFrom=null;const from=auto||LS.get('from')||{name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};
+  const START=[{k:'office',name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon},...FABS];
+  const preset=START.find(s=>Math.abs(s.lat-from.lat)<1e-4&&Math.abs(s.lon-from.lon)<1e-4);
+  const truckLine=t=>`${t.len} ft overall · ${Math.floor(t.h)}'-${Math.round((t.h%1)*12)}" tall · ${(+t.lbs).toLocaleString()} lbs${t.haz?' · hazmat':''}`;
   $('side').innerHTML=`<h3>Truck route to the site</h3>
-  <div class="fld"><label for="rFrom">From</label><div><input id="rFrom" value="${esc(from.name)}" autocomplete="off" spellcheck="false"><div class="sugg" id="rSugg"></div></div></div>
-  <div class="row"><button class="btn" id="rOffice" type="button">Use San Clemente office</button><button class="btn" id="rFind" type="button">Find address</button></div>
-  ${FABS.length?`<div class="row" id="rFabs">${FABS.map((f,i)=>`<button class="btn" type="button" data-i="${i}">${esc(f.name)}</button>`).join('')}</div>`:''}
-  <h4>Truck</h4>
+  <div class="fld one"><label for="rStart">Start from</label>
+    <select id="rStart"><optgroup label="Millennium"><option value="0">${esc(OFFICE.name)}</option></optgroup>
+      ${FABS.length?`<optgroup label="Suppliers and yards">${FABS.map((f,i)=>`<option value="${i+1}">${esc(f.name)}</option>`).join('')}</optgroup>`:''}
+      <optgroup label="Other"><option value="custom">Another address…</option></optgroup></select></div>
+  <div id="rCustom" ${preset?'hidden':''}><div class="srch"><input id="rFrom" value="${preset?'':esc(from.name)}" placeholder="Street address or place" autocomplete="off" spellcheck="false" aria-label="Start address"><button class="btn" id="rFind" type="button">Find</button></div><div class="sugg" id="rSugg"></div></div>
+  <details class="truck"><summary><span>Truck</span><b id="tSum">${esc(truckLine(T))}</b><em>Change</em></summary>
   <div class="fld">
     <label for="tLbs">Gross weight (lbs)</label><input id="tLbs" inputmode="numeric" value="${T.lbs}">
     <label for="tLen">Overall length (ft)</label><input id="tLen" inputmode="decimal" value="${T.len}">
@@ -114,8 +119,8 @@ function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const auto
     <label for="tW">Width (ft)</label><input id="tW" inputmode="decimal" value="${T.w}">
     <label for="tHaz">Hazmat</label><select id="tHaz"><option value="">None</option>${[1,2,3,4,5,6,7,8,9].map(n=>`<option value="USHazmatClass${n}" ${T.haz==='USHazmatClass'+n?'selected':''}>Class ${n}</option>`).join('')}</select>
   </div>
-  <div class="note" style="margin-top:4px">Default: ${DEF_TRUCK.load.toLocaleString()} lb load on a ${DEF_TRUCK.trailer} ft flatbed, 13'-6" tall, about ${DEF_TRUCK.lbs.toLocaleString()} lbs gross with the tractor, ${DEF_TRUCK.len} ft overall. Change any value; it is remembered on this device.</div>
-  <div class="row"><button class="btn pri" id="rGo" type="button">Plan truck route</button></div>
+  <div class="note" style="margin-top:6px">Standard delivery: ${DEF_TRUCK.load.toLocaleString()} lb load on a ${DEF_TRUCK.trailer} ft flatbed, about ${DEF_TRUCK.lbs.toLocaleString()} lbs gross with the tractor. Changes are remembered on this device.</div></details>
+  <button class="btn pri wide" id="rGo" type="button">Plan truck route</button>
   <div id="rOut"></div>`;
   let FROM=from;
   const sugg=async()=>{const q=$('rFrom').value.trim();if(q.length<4)return;$('rSugg').innerHTML='<span class="dim">Searching…</span>';
@@ -124,8 +129,11 @@ function routePanel(){const T={...DEF_TRUCK,...(LS.get('truck')||{})};const auto
       $('rSugg').querySelectorAll('button').forEach(b=>b.onclick=()=>{const r=j.results[+b.dataset.i];FROM={name:r.address.freeformAddress,lat:r.position.lat,lon:r.position.lon};LS.set('from',FROM);$('rFrom').value=FROM.name;$('rSugg').innerHTML=''})}
     catch(e){$('rSugg').innerHTML=`<span class="dim">${esc(e.message)}</span>`}};
   $('rFind').onclick=sugg;$('rFrom').onkeydown=e=>{if(e.key==='Enter')sugg()};
-  $('rOffice').onclick=()=>{FROM={name:OFFICE.name,lat:OFFICE.lat,lon:OFFICE.lon};LS.set('from',FROM);$('rFrom').value=FROM.name;$('rSugg').innerHTML=''};
-  document.querySelectorAll('#rFabs button').forEach(b=>b.onclick=()=>{const f=FABS[+b.dataset.i];FROM={name:f.name,lat:f.lat,lon:f.lon};LS.set('from',FROM);$('rFrom').value=FROM.name;$('rSugg').innerHTML='';$('rGo').click()});
+  const sel=$('rStart');sel.value=preset?String(START.indexOf(preset)):'custom';
+  sel.onchange=()=>{const v=sel.value;$('rCustom').hidden=v!=='custom';$('rSugg').innerHTML='';
+    if(v==='custom'){$('rFrom').focus();return}
+    const s=START[+v];FROM={name:s.name,lat:s.lat,lon:s.lon};LS.set('from',FROM);$('rGo').click()};
+  ['tLbs','tLen','tH','tW','tHaz'].forEach(id=>$(id).addEventListener('change',()=>{$('tSum').textContent=truckLine({lbs:+$('tLbs').value||DEF_TRUCK.lbs,len:+$('tLen').value||DEF_TRUCK.len,h:+$('tH').value||DEF_TRUCK.h,haz:$('tHaz').value})}));
   $('rGo').onclick=async()=>{const T2={lbs:+$('tLbs').value||DEF_TRUCK.lbs,len:+$('tLen').value||DEF_TRUCK.len,h:+$('tH').value||DEF_TRUCK.h,w:+$('tW').value||DEF_TRUCK.w,haz:$('tHaz').value};LS.set('truck',T2);
     const out=$('rOut');out.innerHTML='<div class="dim">Planning the truck route…</div>';
     try{const q={'api-version':'1.0',query:`${FROM.lat},${FROM.lon}:${lat},${lon}`,travelMode:'truck',vehicleCommercial:'true',
@@ -159,7 +167,7 @@ async function trafficPanel(){const side=$('side');side.innerHTML=`<h3>Live traf
 // ---------- Weather ----------
 async function weatherPanel(){const side=$('side');side.innerHTML='<h3>Weather at the site</h3><div class="dim">Loading…</div>';
   if(map)map.setCamera({center:[lon,lat],zoom:12,type:'ease',duration:600});
-  if(!MKEY){side.innerHTML+='<div class="alert">The Azure Maps key is not set up yet.</div>';return}
+  if(!MKEY){side.innerHTML='<h3>Weather at the site</h3><div class="alert">The Azure Maps key is not set up yet.</div>';return}
   try{const q={'api-version':'1.1',query:`${lat},${lon}`,unit:'imperial'};
     const [cur,hr,al]=await Promise.all([api('/weather/currentConditions/json',{...q,details:'true'}),api('/weather/forecast/hourly/json',{...q,duration:24}),api('/weather/severe/alerts/json',{'api-version':'1.1',query:`${lat},${lon}`,details:'true'}).catch(()=>({results:[]}))]);
     const c=(cur.results||[])[0]||{},v=o=>o&&o.value!=null?Math.round(o.value):'–';

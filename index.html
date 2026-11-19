@@ -17,7 +17,11 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:14px/1
 header{display:flex;align-items:center;gap:10px;padding:8px max(14px,env(safe-area-inset-right)) 6px max(14px,env(safe-area-inset-left));padding-top:calc(8px + env(safe-area-inset-top));background:var(--panel);min-width:0}
 header .t{min-width:0;flex:1}
 header b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-header span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .t span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header b{letter-spacing:-.01em}
+.brand{display:flex;align-items:center;gap:8px;flex:0 0 auto;color:var(--muted);font-size:11px;line-height:1.15;text-align:left}
+.brand i{display:grid;place-items:center;width:28px;height:28px;border-radius:6px;background:var(--steel);color:#fff;font:700 15px/1 system-ui,sans-serif;font-style:normal}
+.brand span{font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:10px;color:var(--ink)}.brand em{font-style:normal;font-weight:500;letter-spacing:.02em;text-transform:none;color:var(--muted);font-size:11px}
 nav{display:flex;gap:2px;padding:0 max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left));background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 nav button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:600;padding:8px 12px 9px;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;touch-action:manipulation}
 nav button.on{color:var(--ink);border-bottom-color:var(--amber)}
@@ -29,11 +33,12 @@ main{position:relative;min-height:0;min-width:0}
 #info .dim,.dim{color:var(--muted)}
 .flag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px;margin-right:6px;color:#fff;background:var(--ok)}
 .flag.red{background:var(--hot)}.flag.amb{background:var(--amber);color:#111}
-#msg,.msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.72);padding:12px 16px;border-radius:8px;max-width:min(440px,calc(100% - 32px));z-index:4}
+#msg,.msg{overflow-wrap:anywhere;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.72);padding:12px 16px;border-radius:8px;max-width:min(440px,calc(100% - 32px));z-index:4}
+@media (max-width:760px){.fld input,.fld select,.srch input,#rStart{font-size:16px}.brand{display:none}}
 #msg input{width:100%;margin:8px 0;padding:8px;border-radius:6px;border:1px solid var(--line);background:#0b1116;color:var(--ink);font-size:16px}
 #meas{position:absolute;right:max(12px,env(safe-area-inset-right));top:12px;background:rgba(14,21,27,.88);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;z-index:3;max-width:260px}
-footer{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px max(14px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:var(--panel);border-top:1px solid var(--line)}
-footer>*{flex:0 0 auto}
+footer{display:flex;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:10px;align-items:center;padding:8px max(14px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));background:var(--panel);border-top:1px solid var(--line)}
+footer>*{flex:0 0 auto}footer .sep{width:1px;height:22px;background:var(--line)}footer .lab{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .seg button,.btn{border:0;background:transparent;color:#dbe4ea;font:inherit;font-size:12px;padding:7px 10px;cursor:pointer;touch-action:manipulation}
 .seg button.on{background:var(--steel);color:#fff}
@@ -49,7 +54,18 @@ label.ck{display:flex;align-items:center;gap:5px;font-size:12px;color:#dbe4ea}
 #side h4,#flyside h4{margin:14px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fld{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px;align-items:center}
 .fld label{font-size:12px;color:var(--muted)}
-.fld input,.fld select{width:100%;min-width:0;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:#0b1116;color:var(--ink);font:inherit;font-size:16px}
+.fld input,.fld select,.srch input,#rStart{width:100%;min-width:0;height:34px;padding:0 9px;border-radius:6px;border:1px solid var(--line);background:#0b1116;color:var(--ink);font:inherit;font-size:14px}
+.fld.one{grid-template-columns:minmax(0,1fr);gap:4px}
+.srch{display:flex;gap:6px;margin-top:8px}.srch .btn{height:34px}
+details.truck{margin:12px 0 4px;border:1px solid var(--line);border-radius:8px;padding:0 10px;background:var(--panel2)}
+details.truck summary{list-style:none;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 0;cursor:pointer;font-size:12px}
+details.truck summary::-webkit-details-marker{display:none}
+details.truck summary span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+details.truck summary b{font-weight:600;line-height:1.35}
+details.truck summary em{font-style:normal;color:#9fd0ff;font-size:12px}
+details.truck[open] summary em{visibility:hidden}
+details.truck[open]{padding-bottom:10px}
+.btn.wide{width:100%;height:38px;margin-top:10px;font-size:13px}
 .row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0}
 .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;margin:6px 0}
 .kv b{font-variant-numeric:tabular-nums}
@@ -70,11 +86,12 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
   #side,#flyside{border-left:0;border-top:1px solid var(--line)}
   #info{font-size:11px;padding:6px 8px}#info .note{display:none}#meas{top:auto;bottom:12px;right:auto;left:12px;max-width:calc(100% - 90px)}
 }
+@media (max-width:760px){footer{flex-wrap:wrap;overflow:visible;gap:6px 12px}footer .lab,footer .sep{display:none}#views,#reach{flex:1 1 100%}#views button,#reach button{flex:1}#measBtn{margin-left:auto}}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><div class="t"><b id="title">Jobsite</b><span id="sub"></span></div></header>
+  <header><div class="t"><b id="title">Jobsite</b><span id="sub"></span></div><div class="brand" aria-hidden="true"><i>M</i><span>Millennium<br><em>Site Viewer</em></span></div></header>
   <nav id="tabs" aria-label="Views">
     <button data-t="3d">3D city</button><button data-t="fly">Flyover</button><button data-t="sat">Satellite</button><button data-t="route">Truck route</button><button data-t="traffic">Traffic</button><button data-t="wx">Weather</button>
   </nav>
@@ -84,10 +101,10 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
     <div class="pane" id="tools" hidden><div id="am"><div class="msg" id="amsg" hidden></div></div><aside id="side"></aside></div>
   </main>
   <footer id="foot3d" hidden>
-    <div class="seg" id="views"><button data-v="orbit" class="on">Orbit</button><button data-v="fly">Fly in</button><button data-v="top">Top</button><button data-v="street">Street</button><button data-v="free">Free</button></div>
-    <div class="seg" id="reach"><button data-r="100">100 ft</button><button data-r="150">150 ft</button><button data-r="200">200 ft</button><button data-r="250">250 ft</button></div>
-    <label class="ck"><input type="checkbox" id="ckPw" checked> Power</label>
-    <label class="ck"><input type="checkbox" id="ckReach" checked> Reach</label>
+    <span class="lab">View</span><div class="seg" id="views"><button data-v="orbit" class="on">Orbit</button><button data-v="fly">Fly in</button><button data-v="top">Top</button><button data-v="street">Street</button><button data-v="free" hidden>Free</button></div>
+    <span class="sep"></span><span class="lab">Crane reach</span><div class="seg" id="reach"><button data-r="100">100 ft</button><button data-r="150">150 ft</button><button data-r="200">200 ft</button><button data-r="250">250 ft</button></div>
+    <span class="sep"></span><label class="ck"><input type="checkbox" id="ckPw" checked> Power lines</label>
+    <label class="ck"><input type="checkbox" id="ckReach" checked> Reach ring</label>
     <button class="btn" id="measBtn" type="button">Measure</button>
   </footer>
 </div>
