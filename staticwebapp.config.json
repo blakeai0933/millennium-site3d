@@ -1,7 +1,4 @@
 {
-  "routes": [
-    { "route": "/.auth/*", "statusCode": 404 }
-  ],
   "globalHeaders": {
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "X-Robots-Tag": "noindex, nofollow",
