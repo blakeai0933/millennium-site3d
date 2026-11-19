@@ -8,6 +8,7 @@
 <title>Millennium Site Viewer</title>
 <link rel="preconnect" href="https://tile.googleapis.com">
 <link rel="preconnect" href="https://atlas.microsoft.com">
+<link rel="preconnect" href="https://maps.googleapis.com">
 <style>
 :root{--bg:#0e151b;--panel:#16212a;--panel2:#1c2933;--ink:#e8eef3;--muted:#9fb0bf;--line:#35444f;--steel:#2f6f9f;--hot:#e0312b;--ok:#2e9e6a;--amber:#f2b01e}
 *{box-sizing:border-box}
@@ -40,11 +41,12 @@ footer>*{flex:0 0 auto}
 .btn.on,.btn.pri{background:var(--amber);color:#111;border-color:var(--amber);font-weight:600}
 label.ck{display:flex;align-items:center;gap:5px;font-size:12px;color:#dbe4ea}
 /* Azure Maps tabs: map plus a side panel (bottom sheet on phones) */
-#tools{display:grid;grid-template-columns:minmax(0,1fr) 360px}
+#tools,#flyp{display:grid;grid-template-columns:minmax(0,1fr) 360px}
+#flym{position:relative;min-width:0;min-height:0}#flym gmp-map-3d{position:absolute;inset:0;width:100%;height:100%}
 #am{position:relative;min-width:0;min-height:0}
-#side{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain;padding:12px 14px calc(14px + env(safe-area-inset-bottom));font-size:13px;min-width:0}
-#side h3{margin:2px 0 8px;font-size:14px}
-#side h4{margin:14px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#side,#flyside{background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain;padding:12px 14px calc(14px + env(safe-area-inset-bottom));font-size:13px;min-width:0}
+#side h3,#flyside h3{margin:2px 0 8px;font-size:14px}
+#side h4,#flyside h4{margin:14px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .fld{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px;align-items:center}
 .fld label{font-size:12px;color:var(--muted)}
 .fld input,.fld select{width:100%;min-width:0;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:#0b1116;color:var(--ink);font:inherit;font-size:16px}
@@ -64,8 +66,8 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
 .legend i{display:inline-block;width:18px;height:4px;border-radius:2px;margin:0 4px 1px 8px;vertical-align:middle}
 [hidden]{display:none!important}
 @media (max-width:760px){
-  #tools{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,48%)}
-  #side{border-left:0;border-top:1px solid var(--line)}
+  #tools,#flyp{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,48%)}
+  #side,#flyside{border-left:0;border-top:1px solid var(--line)}
   #info{font-size:11px;padding:6px 8px}#info .note{display:none}#meas{top:auto;bottom:12px}
 }
 </style>
@@ -74,10 +76,11 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
 <div id="app">
   <header><div class="t"><b id="title">Jobsite</b><span id="sub"></span></div></header>
   <nav id="tabs" aria-label="Views">
-    <button data-t="3d">3D city</button><button data-t="sat">Satellite</button><button data-t="route">Truck route</button><button data-t="traffic">Traffic</button><button data-t="wx">Weather</button>
+    <button data-t="3d">3D city</button><button data-t="fly">Flyover</button><button data-t="sat">Satellite</button><button data-t="route">Truck route</button><button data-t="traffic">Traffic</button><button data-t="wx">Weather</button>
   </nav>
   <main>
     <div class="pane" id="cz" hidden><div id="info" hidden></div><div id="meas" hidden></div><div id="msg" hidden>Loading 3D city…</div></div>
+    <div class="pane" id="flyp" hidden><div id="flym"><div class="msg" id="fmsg" hidden></div></div><aside id="flyside"></aside></div>
     <div class="pane" id="tools" hidden><div id="am"><div class="msg" id="amsg" hidden></div></div><aside id="side"></aside></div>
   </main>
   <footer id="foot3d" hidden>
@@ -90,6 +93,7 @@ ol.steps{margin:6px 0 0;padding-left:20px;font-size:12px}ol.steps li{margin:3px 
 </div>
 <script src="config.js"></script>
 <script src="site3d.js"></script>
+<script src="flyover.js"></script>
 <script src="tools.js"></script>
 </body>
 </html>

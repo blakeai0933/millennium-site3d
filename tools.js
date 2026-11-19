@@ -26,17 +26,18 @@ const loadScript=src=>loaded[src]||(loaded[src]=new Promise((res,rej)=>{const s=
 const loadCss=href=>{if(document.querySelector(`link[href="${href}"]`))return;const l=document.createElement('link');l.rel='stylesheet';l.href=href;document.head.appendChild(l)};
 
 // ---------- tabs ----------
-const TABS=['3d','sat','route','traffic','wx'];
+const TABS=['3d','fly','sat','route','traffic','wx'];
 let tab=null,started3d=false;
 async function show(t){if(!TABS.includes(t))t='3d';tab=t;
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  const is3d=t==='3d';$('cz').hidden=!is3d;$('foot3d').hidden=!is3d;$('tools').hidden=is3d;
+  const is3d=t==='3d',isFly=t==='fly';$('cz').hidden=!is3d;$('foot3d').hidden=!is3d;$('flyp').hidden=!isFly;$('tools').hidden=is3d||isFly;
   if(window.VIEW3D)window.VIEW3D.useDefaultRenderLoop=is3d;
   LS.set('tab',t);
   if(is3d){if(!started3d){started3d=true;$('msg').hidden=false;$('msg').textContent='Loading 3D city…';
       try{loadCss('https://cdn.jsdelivr.net/npm/cesium@1.121.0/Build/Cesium/Widgets/widgets.css');await loadScript('https://cdn.jsdelivr.net/npm/cesium@1.121.0/Build/Cesium/Cesium.js');await window.init3D(P)}
       catch(e){$('msg').hidden=false;$('msg').textContent='3D view could not start: '+(e.message||e)}}
     return}
+  if(isFly){if(window.FLY3D)return;try{await window.initFly(P)}catch(e){$('fmsg').hidden=false;$('fmsg').textContent='Flyover could not start: '+(e.message||e)}return}
   await mapTab(t);
 }
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>show(b.dataset.t));
