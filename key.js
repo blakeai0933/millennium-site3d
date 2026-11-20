@@ -25,12 +25,12 @@ window.KEYSW=S;
 window.POLEICON=(c,tower)=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="-20 -20 40 40"><circle r="15" fill="${c}" stroke="#fff" stroke-width="3.5"/>${tower?'<path d="M0 -9L8 7H-8Z M-4 1H4" fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round"/>':'<path d="M0 10V-10M-8 -5.5H8M-5 -1H5" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round"/>'}</svg>`);
 window.POLECOL=(dft,reach)=>dft<=reach+20?'#e0312b':dft<=300?'#f2b01e':'#d9661f';
 // p = [dx, dy, kind, poleNumber, kV, transformer, owner, circuit] in metres from the site pin
-window.poleHtml=(p,reach)=>{const [dx,dy,k,r,kv,tx,op,ckt]=p,d=Math.round(Math.hypot(dx,dy)*3.28084),a=Math.atan2(dx,dy)*180/Math.PI,dir=['N','NE','E','SE','S','SW','W','NW'][Math.round(((a+360)%360)/45)%8];
+window.poleHtml=(p,reach)=>{const [dx,dy,k,r,kv,tx,op,ckt,src]=p,d=Math.round(Math.hypot(dx,dy)*3.28084),a=Math.atan2(dx,dy)*180/Math.PI,dir=['N','NE','E','SE','S','SW','W','NW'][Math.round(((a+360)%360)/45)%8];
   const e=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   return [`<b>${k==='t'?'Transmission tower':'Utility pole'}${r?' #'+e(r):''}</b>${op?' · '+e(op):''}`,
     (ckt||kv)?`Carries ${ckt?'SCE circuit '+e(ckt)+' ':''}${kv?kv+' kV':''}`:'',tx?'Has a transformer':'',
     `${d} ft ${dir} of the site pin${d<=reach+20?` — <b style="color:#ff6b62">inside the ${reach} ft reach + 20 ft clearance</b>`:d<=300?' — within 300 ft':''}`,
-    `<span style="color:#9fb0bf">Source: ${r&&/^P?\d/.test(r)&&op&&/SCE|SDGE/.test(op)?'OCFA pole inspection list':'OpenStreetMap'}. Verify on site.</span>`].filter(Boolean).join('<br>')};
+    `<span style="color:#9fb0bf">Source: ${src==='f'?'OCFA pole inspection list':src==='y'?'Mapillary street photos (computer-detected; position within a few feet)':'OpenStreetMap'}. Verify on site.</span>`].filter(Boolean).join('<br>')};
 window.poleBox=(host,html)=>{let el=host.querySelector('.polebox');if(!el){el=document.createElement('div');el.className='polebox';host.appendChild(el)}
   el.innerHTML=`<button type="button" aria-label="Close">×</button>${html}`;el.hidden=false;el.firstChild.onclick=()=>{el.hidden=true}};
 window.mapKey=(host,id,groups,note)=>{
