@@ -12,8 +12,9 @@ jobs:
         env:
           GOOGLE_MAPS_KEY: ${{ secrets.GOOGLE_MAPS_KEY }}
           AZURE_MAPS_KEY: ${{ secrets.AZURE_MAPS_KEY }}
+          MAPILLARY_TOKEN: ${{ secrets.MAPILLARY_TOKEN }}
         run: |
-          printf "window.SITE3D={googleKey:'%s',azureMapsKey:'%s'};\n" "$GOOGLE_MAPS_KEY" "$AZURE_MAPS_KEY" > config.js
+          printf "window.SITE3D={googleKey:'%s',azureMapsKey:'%s',mapillaryToken:'%s'};\n" "$GOOGLE_MAPS_KEY" "$AZURE_MAPS_KEY" "$MAPILLARY_TOKEN" > config.js
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
